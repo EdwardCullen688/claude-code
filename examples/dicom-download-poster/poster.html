@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>View Your Medical Images</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1A1D21;
+    --slate: #5B6470;
+    --line: #DADDE2;
+    --mat: #F4F5F7;
+    --paper: #FFFFFF;
+    --accent: #0B5FA5;
+    --spine: #C9CED6;
+    --frame-h: 42mm;
+  }
+  @page { size: A3 portrait; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #E9EBEE; }
+  body {
+    font-family: "Inter", "Noto Sans TC", system-ui, sans-serif;
+    color: var(--ink);
+    font-feature-settings: "tnum" 1, "cv05" 1;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .poster {
+    width: 297mm; min-height: 420mm; margin: 0 auto; background: var(--paper);
+    padding: 20mm; display: flex; flex-direction: column;
+  }
+  @media print { html, body { background: var(--paper); } .poster { margin: 0; } }
+
+  /* Header / Step 1 */
+  .eyebrow { font-size: 11pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin: 0 0 4mm; }
+  h1 { font-size: 40pt; font-weight: 700; line-height: 1.1; letter-spacing: -.01em; margin: 0 0 4mm; }
+  .subtitle { font-size: 16pt; line-height: 1.4; color: var(--slate); margin: 0 0 8mm; max-width: 60ch; }
+
+  .step1 {
+    display: grid; grid-template-columns: 1fr 88mm; gap: 8mm;
+    border-left: 3pt solid var(--accent); padding: 0 0 0 8mm; margin-bottom: 8mm;
+  }
+  .step1 .row { display: flex; gap: 6mm; align-items: flex-start; }
+  .checklist { background: var(--mat); border-radius: 3mm; padding: 5mm 6mm; font-size: 11pt; line-height: 1.45; }
+  .checklist h3 { font-size: 10pt; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--slate); margin: 0 0 2mm; }
+  .checklist ul { list-style: none; margin: 0; padding: 0; }
+  .checklist li::before { content: "☐  "; color: var(--accent); }
+
+  hr { border: 0; border-top: .5pt solid var(--line); margin: 0 0 10mm; }
+
+  /* Step markers */
+  .num {
+    flex: none; width: 14mm; height: 14mm; border-radius: 50%;
+    display: grid; place-items: center; font-size: 22pt; font-weight: 700;
+    background: var(--accent); color: #fff; position: relative; z-index: 1;
+  }
+  .num.outline { background: var(--paper); color: var(--accent); border: 2pt solid var(--accent); }
+
+  .action { font-size: 22pt; font-weight: 700; line-height: 1.2; letter-spacing: -.005em; margin: 1.5mm 0 3mm; }
+  .desc { font-size: 14pt; line-height: 1.45; margin: 0 0 3mm; max-width: 60ch; }
+  .key { font-size: 12pt; font-weight: 600; line-height: 1.35; color: var(--accent); margin: 0; }
+  .key::before { content: "▸ "; }
+
+  /* Steps 2–5 */
+  .steps { position: relative; display: flex; flex-direction: column; gap: 7mm; flex: 1; }
+  .steps::before { /* workflow spine */
+    content: ""; position: absolute; left: 7mm; top: 7mm; bottom: 7mm;
+    width: 2pt; transform: translateX(-50%); background: var(--spine);
+  }
+  .step { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; align-items: start; }
+  .step .text { display: flex; gap: 6mm; }
+
+  .frame {
+    height: var(--frame-h); background: var(--mat); border: 1pt solid var(--line); border-radius: 3mm;
+    display: grid; place-items: center; padding: 3mm; position: relative;
+  }
+  .shot {
+    position: relative; aspect-ratio: var(--r);
+    width: min(100%, calc((var(--frame-h) - 6mm) * var(--r)));
+    overflow: hidden; border: .5pt solid var(--line); background: #fff;
+  }
+  .shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+  .shot.crop img { width: 192%; height: auto; }
+  .shot.top img { height: auto; }
+  .label { position: absolute; left: 3mm; top: 3mm; font-size: 10pt; font-weight: 500; letter-spacing: .02em; color: var(--slate); background: var(--mat); padding: .5mm 2mm; border-radius: 1mm; z-index: 2; }
+
+  /* Accent callouts, positioned in % of the screenshot */
+  .ring { position: absolute; border: 2pt solid var(--accent); border-radius: 2mm; box-shadow: 0 0 0 2pt rgba(255,255,255,.85); }
+  .ring.circle { border-radius: 50%; }
+  .badge {
+    position: absolute; width: 6mm; height: 6mm; border-radius: 50%; background: var(--accent); color: #fff;
+    font-size: 9pt; font-weight: 700; display: grid; place-items: center; transform: translate(-50%, -50%);
+  }
+
+  footer {
+    margin-top: 8mm; padding-top: 4mm; border-top: .5pt solid var(--line);
+    display: grid; grid-template-columns: 1fr 1fr 22mm; gap: 8mm; align-items: center;
+    font-size: 10pt; line-height: 1.4; color: var(--slate);
+  }
+  footer strong { color: var(--ink); }
+  .qr { width: 22mm; height: 22mm; border: 1pt dashed var(--line); display: grid; place-items: center; font-size: 8pt; text-align: center; }
+</style>
+</head>
+<body>
+<main class="poster">
+
+  <!-- STEP 1 · Overview header -->
+  <header>
+    <p class="eyebrow">Patient Guide · Digital Imaging</p>
+    <h1>How to View Your Medical Images</h1>
+    <p class="subtitle">Your scan results are in a secure OneDrive folder. It takes about 3&nbsp;minutes on a Windows computer.</p>
+
+    <section class="step1">
+      <div class="row">
+        <div class="num outline">1</div>
+        <div>
+          <h2 class="action">Open the link</h2>
+          <p class="desc">Click the link in your email to open the Microsoft&nbsp;OneDrive folder that holds your images.</p>
+        </div>
+      </div>
+      <aside class="checklist">
+        <h3>Before you start</h3>
+        <ul>
+          <li>A Windows PC (a phone or tablet will not work)</li>
+          <li>The email from our imaging centre</li>
+          <li>Your mobile phone number (this is your password)</li>
+        </ul>
+      </aside>
+    </section>
+  </header>
+
+  <hr>
+
+  <!-- STEPS 2–5 -->
+  <section class="steps">
+
+    <article class="step">
+      <div class="text">
+        <div class="num">2</div>
+        <div>
+          <h2 class="action">Download the ZIP file</h2>
+          <p class="desc">Click the <strong>Download</strong> icon in the top-left corner to save the file to your computer.</p>
+          <p class="key">Look for the ↓ arrow next to the bin icon.</p>
+        </div>
+      </div>
+      <div class="frame">
+        <span class="label">Image 2</span>
+        <div class="shot crop" style="--r: 1000/560">
+          <img src="images/image-2-download.jpg" alt="OneDrive preview with the Download icon in the top-left corner">
+          <span class="ring circle" style="left:0.2%; top:0.3%; width:4.4%; height:7.2%"></span>
+          <span class="ring" style="left:0.3%; top:7.6%; width:18.4%; height:5.6%"></span>
+        </div>
+      </div>
+    </article>
+
+    <article class="step">
+      <div class="text">
+        <div class="num">3</div>
+        <div>
+          <h2 class="action">Extract the files</h2>
+          <p class="desc">Find the downloaded ZIP file, right-click it and select <strong>Extract All…</strong></p>
+          <p class="key">Usually in your Downloads folder.</p>
+        </div>
+      </div>
+      <div class="frame">
+        <span class="label">Image 3</span>
+        <div class="shot" style="--r: 668/496">
+          <img src="images/image-3-extract.jpg" alt="Right-click menu with Extract All highlighted">
+          <span class="ring" style="left:36.5%; top:28.2%; width:41.5%; height:5%"></span>
+          <span class="badge" style="left:36.5%; top:28.2%">1</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="step">
+      <div class="text">
+        <div class="num">4</div>
+        <div>
+          <h2 class="action">Enter your password</h2>
+          <p class="desc">When prompted during extraction, type your <strong>mobile phone number</strong> and click <strong>OK</strong>.</p>
+          <p class="key">Digits only. No spaces, dashes or country code.</p>
+        </div>
+      </div>
+      <div class="frame">
+        <span class="label">Image 4</span>
+        <div class="shot" style="--r: 841/488">
+          <img src="images/image-4-password.jpg" alt="Password needed dialog during extraction">
+          <span class="ring" style="left:63.5%; top:89.8%; width:17.8%; height:6%"></span>
+          <span class="badge" style="left:63.5%; top:89.8%">1</span>
+          <span class="ring" style="left:82.4%; top:72.6%; width:7.4%; height:5.6%"></span>
+          <span class="badge" style="left:89.8%; top:72.6%">2</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="step">
+      <div class="text">
+        <div class="num">5</div>
+        <div>
+          <h2 class="action">Open your images</h2>
+          <p class="desc">Open the extracted folder and double-click <strong>Double click to run.BAT</strong>. The image viewer will start.</p>
+          <p class="key">Do not run it from inside the ZIP. Extract first.</p>
+        </div>
+      </div>
+      <div class="frame">
+        <span class="label">Image 5</span>
+        <div class="shot top" style="--r: 773/150">
+          <img src="images/image-5-run.jpg" alt="Extracted folder with Double click to run.BAT highlighted">
+          <span class="ring" style="left:4.5%; top:61.5%; width:76%; height:15.6%"></span>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <footer>
+    <div><strong>Need help?</strong> Imaging Centre Reception<br>☎ [phone] · ✉ [email] · Mon–Fri [hours]</div>
+    <div><em>Only open links from emails sent by our centre. We will never ask for your password by phone or email.</em></div>
+    <div class="qr">QR<br>video guide</div>
+  </footer>
+
+</main>
+</body>
+</html>
